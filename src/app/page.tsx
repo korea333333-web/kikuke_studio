@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useStoryStore } from '@/store/useStoryStore';
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -9,9 +11,35 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Home() {
+  const router = useRouter();
+  const { setBasicSettings } = useStoryStore();
+
   const [topic, setTopic] = useState("");
+  const [customTopic, setCustomTopic] = useState("");
+
   const [target, setTarget] = useState("");
+  const [customTarget, setCustomTarget] = useState("");
+
   const [tone, setTone] = useState("");
+  const [customTone, setCustomTone] = useState("");
+
+  const handleNextStep = () => {
+    const finalTopic = topic === "custom" ? customTopic : topic;
+    const finalTarget = target === "custom" ? customTarget : target;
+    const finalTone = tone === "custom" ? customTone : tone;
+
+    setBasicSettings(finalTopic, finalTarget, finalTone);
+    router.push('/story-script');
+  };
+
+  const handleReset = () => {
+    setTopic("");
+    setCustomTopic("");
+    setTarget("");
+    setCustomTarget("");
+    setTone("");
+    setCustomTone("");
+  };
   return (
     <div className="flex h-full w-full flex-col items-center bg-gray-50 overflow-y-auto">
       <div className="w-full max-w-5xl p-8 mt-12">
@@ -60,6 +88,8 @@ export default function Home() {
                   <Textarea
                     placeholder="예) 인공지능이 세상을 지배하게 된 먼 미래를 배경으로 한 SF 액션 드라마"
                     className="min-h-[100px] bg-white resize-none mt-3"
+                    value={customTopic}
+                    onChange={(e) => setCustomTopic(e.target.value)}
                   />
                 )}
               </div>
@@ -85,6 +115,8 @@ export default function Home() {
                   <Input
                     placeholder="예) 10-20대 SF 및 미스터리 영화 매니아"
                     className="bg-white mt-3"
+                    value={customTarget}
+                    onChange={(e) => setCustomTarget(e.target.value)}
                   />
                 )}
               </div>
@@ -110,6 +142,8 @@ export default function Home() {
                   <Input
                     placeholder="예) 어둡고 무거운 분위기, 차갑고 건조한 대사 톤"
                     className="bg-white mt-3"
+                    value={customTone}
+                    onChange={(e) => setCustomTone(e.target.value)}
                   />
                 )}
               </div>
@@ -117,10 +151,14 @@ export default function Home() {
 
             {/* 하단 버튼 블록 */}
             <div className="mt-10 pt-6 border-t flex justify-end gap-3">
-              <Button variant="outline" className="w-[120px]">
+              <Button variant="outline" className="w-[120px]" onClick={handleReset}>
                 초기화
               </Button>
-              <Button className="w-[200px] bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+              <Button
+                className="w-[200px] bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                onClick={handleNextStep}
+                disabled={!topic || !target || !tone}
+              >
                 다음 단계로
               </Button>
             </div>

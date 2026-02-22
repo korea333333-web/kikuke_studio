@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useStoryStore } from '@/store/useStoryStore';
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 
 export default function StoryScriptPage() {
+    const { topic } = useStoryStore();
     const [step, setStep] = useState(1);
+    const [localTopic, setLocalTopic] = useState("");
+
+    useEffect(() => {
+        if (topic) {
+            setLocalTopic(topic);
+        }
+    }, [topic]);
 
     const handleNext = () => setStep(step < 3 ? step + 1 : 3);
     const handlePrev = () => setStep(step > 1 ? step - 1 : 1);
@@ -75,6 +84,8 @@ export default function StoryScriptPage() {
                                     <Input
                                         placeholder="예: 용사가 마왕을 물리치는 여정, 천재 해커의 복수극"
                                         className="bg-white"
+                                        value={localTopic}
+                                        onChange={(e) => setLocalTopic(e.target.value)}
                                     />
                                 </div>
                             </div>
