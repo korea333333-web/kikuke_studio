@@ -1,65 +1,132 @@
-import Image from "next/image";
+"use client";
+
+import React, { useState } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Home() {
+  const [topic, setTopic] = useState("");
+  const [target, setTarget] = useState("");
+  const [tone, setTone] = useState("");
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex h-full w-full flex-col items-center bg-gray-50 overflow-y-auto">
+      <div className="w-full max-w-5xl p-8 mt-12">
+        {/* 헤더 영역 */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">기본 설정</h2>
+          <p className="text-gray-500">영상을 만들기 위해 필요한 기본 정보를 직접 입력해주세요.</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+
+
+
+        {/* 1단계 입력 폼 카드 */}
+        <Card className="border shadow-sm bg-white">
+          <CardContent className="p-8">
+            <h3 className="text-lg font-bold text-gray-900 mb-6 antialiased">영상 기본 정보</h3>
+            <p className="text-sm text-gray-500 mb-8 pb-4 border-b">
+              만들고자 하는 영상의 주제와 설정들을 자유롭게 입력해주세요.
+            </p>
+
+            <div className="space-y-8">
+
+
+              {/* 주제 및 기획 의도 */}
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-gray-700">주제 및 내용</Label>
+                <Select onValueChange={setTopic}>
+                  <SelectTrigger className="w-full text-left font-normal bg-white">
+                    <SelectValue placeholder="영상의 주제를 선택해주세요" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="short-movie">단편 영화 / 웹드라마 (로맨스, 스릴러 등)</SelectItem>
+                    <SelectItem value="mystery">미스터리 / 공포 괴담 / 기묘한 이야기</SelectItem>
+                    <SelectItem value="sci-fi">SF / 미래형 세계관 시나리오</SelectItem>
+                    <SelectItem value="fantasy">무협 / 판타지 소설 (오디오북 스크립트)</SelectItem>
+                    <SelectItem value="true-crime">범죄 프로파일링 / 미제 사건 분석(스토리텔링형)</SelectItem>
+                    <SelectItem value="history">역사적 사건 기반 픽션 드라마</SelectItem>
+                    <SelectItem value="fairytale">어린이용 창작 동화 / 애니메이션 대본</SelectItem>
+                    <SelectItem value="music-video">세계관 기반 뮤직비디오 스토리보드</SelectItem>
+                    <SelectItem value="it-review">IT 기기 / 전자기기 리뷰</SelectItem>
+                    <SelectItem value="vlogs">일상 브이로그 (Vlog)</SelectItem>
+                    <SelectItem value="finance">재테크 / 주식 / 부동산 (스토리텔링형 해설)</SelectItem>
+                    <SelectItem value="custom">직접 입력하기</SelectItem>
+                  </SelectContent>
+                </Select>
+                {topic === "custom" && (
+                  <Textarea
+                    placeholder="예) 인공지능이 세상을 지배하게 된 먼 미래를 배경으로 한 SF 액션 드라마"
+                    className="min-h-[100px] bg-white resize-none mt-3"
+                  />
+                )}
+              </div>
+
+              {/* 타겟 시청자 */}
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-gray-700">타겟 시청자</Label>
+                <Select onValueChange={setTarget}>
+                  <SelectTrigger className="w-full text-left font-normal bg-white">
+                    <SelectValue placeholder="주요 시청자층을 선택해주세요" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="teen">10대 (트렌디, 빠르고 숏폼 선호)</SelectItem>
+                    <SelectItem value="twenties">2030세대 (자기계발, 재밌고 실용적인 내용)</SelectItem>
+                    <SelectItem value="office">직장인 (공감대, 재테크, 스트레스 해소)</SelectItem>
+                    <SelectItem value="parents">육아/주부 (공감, 생활 꿀팁, 교육)</SelectItem>
+                    <SelectItem value="senior">시니어 (알기 쉬운 설명, 느린 템포, 건강/정보)</SelectItem>
+                    <SelectItem value="all">전 연령층 (대중적인 콘텐츠)</SelectItem>
+                    <SelectItem value="custom">직접 입력하기</SelectItem>
+                  </SelectContent>
+                </Select>
+                {target === "custom" && (
+                  <Input
+                    placeholder="예) 10-20대 SF 및 미스터리 영화 매니아"
+                    className="bg-white mt-3"
+                  />
+                )}
+              </div>
+
+              {/* 톤앤매너 설정 */}
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-gray-700">톤앤매너 (분위기 및 말투)</Label>
+                <Select onValueChange={setTone}>
+                  <SelectTrigger className="w-full text-left font-normal bg-white">
+                    <SelectValue placeholder="영상의 전반적인 분위기를 선택해주세요" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="professional">전문적이고 신뢰감 있는 (존댓말, 아나운서 톤)</SelectItem>
+                    <SelectItem value="friendly">친근하고 편안한 (가벼운 존댓말, 옆집 형/누나 톤)</SelectItem>
+                    <SelectItem value="humorous">유머러스하고 재치있는 (드립, 활기찬 톤)</SelectItem>
+                    <SelectItem value="calm">차분하고 감성적인 (ASMR, 조용한 독백 톤)</SelectItem>
+                    <SelectItem value="energetic">텐션이 높고 에너지 넘치는 (빠른 전개, 강한 억양)</SelectItem>
+                    <SelectItem value="cinematic">긴장감 넘치고 시네마틱한 (영화 예고편 톤)</SelectItem>
+                    <SelectItem value="custom">직접 입력하기</SelectItem>
+                  </SelectContent>
+                </Select>
+                {tone === "custom" && (
+                  <Input
+                    placeholder="예) 어둡고 무거운 분위기, 차갑고 건조한 대사 톤"
+                    className="bg-white mt-3"
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* 하단 버튼 블록 */}
+            <div className="mt-10 pt-6 border-t flex justify-end gap-3">
+              <Button variant="outline" className="w-[120px]">
+                초기화
+              </Button>
+              <Button className="w-[200px] bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+                다음 단계로
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
