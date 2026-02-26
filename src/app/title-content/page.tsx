@@ -1,165 +1,248 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useStoryStore } from '@/store/useStoryStore';
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles, FileText, Hash } from "lucide-react";
+import { Sparkles, FileText } from "lucide-react";
+import { StoryContextPanel } from '@/components/StoryContextPanel';
+import { History, Trash2, ChevronRight, Save } from "lucide-react";
+import { format } from "date-fns";
 
 export default function TitleContentPage() {
+    const { videoFormat, topic, targetAudience, tone, characterSheet, synopsis, title, setScript, setTitle, setDescription, scriptHistory, addScriptToHistory, deleteScriptFromHistory } = useStoryStore();
+
+    // Local ui state
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    // Request Options
+    const [length, setLength] = useState("10000");
+    const [endingStyle, setEndingStyle] = useState("complete"); // [NEW] 단편 완결형 vs 시리즈형 클리프행거 옵션
+    const [episodeCount, setEpisodeCount] = useState("3"); // [NEW] 총 제작 편수
+
+    // Response State
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [localScript, setLocalScript] = useState("");
+    const [titles, setTitles] = useState<string[]>([]);
+    const [errorMsg, setErrorMsg] = useState("");
+
+    const handleGenerate = async () => {
+        setIsGenerating(true);
+        setErrorMsg("");
+
+        try {
+            const res = await fetch('/api/generate-script', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    videoFormat,
+                    topic,
+                    targetAudience,
+                    tone,
+                    characterSheet,
+                    synopsis,
+                    title
+                })
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || "서버 응답 오류");
+            }
+
+            const data = await res.json();
+
+            // Validate and Set State
+            if (data.error) throw new Error(data.error);
+
+            setTitles(data.titles || []);
+            setLocalScript(data.script || "");
+
+            // Save to Global Store
+            const newScript = data.script || "";
+            const newTitle = data.titles?.[0] || title;
+            setScript(newScript);
+            setTitle(newTitle);
+
+            // AUTO SAVE TO HISTORY
+            addScriptToHistory({
+                title: newTitle,
+                script: newScript,
+                characterSheet,
+                endingStyle,
+                episodeCount
+            });
+
+        } catch (err: any) {
+            console.error(err);
+            setErrorMsg(err.message || "대본 및 메타데이터 생성 중 오류가 발생했습니다.");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    // [Action] Load from History
+    const loadHistory = (entry: any) => {
+        setTitle(entry.title);
+        setScript(entry.script);
+        setLocalScript(entry.script);
+        // Note: setting characterSheet might overlap with state, but okay for sync
+        setIsSidebarOpen(false); // Close sidebar automatically
+    };
+
     return (
-        <div className="flex h-full w-full flex-col items-center bg-gray-50 overflow-y-auto">
-            <div className="w-full max-w-5xl p-8 mt-12">
-                {/* 헤더 영역 */}
-                <div className="mb-8">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">제목/내용 생성</h2>
-                    <p className="text-gray-500">생성된 대본을 바탕으로 유튜브 업로드용 제목과 더보기란(설명, 태그)을 제안합니다.</p>
+        <div className="flex h-screen w-full bg-gray-50 overflow-hidden relative">
+
+            {/* MAIN CONTENT AREA */}
+            <div className="flex-1 flex flex-col h-full overflow-y-auto">
+                <StoryContextPanel />
+                <div className="w-full max-w-5xl mx-auto p-4 md:p-8 mt-12 pb-32">
+                    {/* Header */}
+                    <div className="flex justify-between items-end mb-8">
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">대본 생성 (집필)</h2>
+                            <p className="text-gray-500">기획된 내용을 바탕으로 실제 유튜브 영상에 들어갈 전체 대본을 제미나이(Gemini 2.5)가 집필합니다.</p>
+                        </div>
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                            className="flex items-center gap-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                        >
+                            <History size={16} />
+                            <span className="hidden sm:inline">저장된 기획안 보기</span>
+                            {scriptHistory.length > 0 && (
+                                <span className="bg-indigo-100 text-indigo-800 text-xs font-bold px-2 py-0.5 rounded-full">
+                                    {scriptHistory.length}
+                                </span>
+                            )}
+                        </Button>
+                    </div>
+
+                    {/* 생성 확인 패널 */}
+                    <Card className="border shadow-sm bg-white rounded-xl mb-8">
+                        <CardContent className="p-8">
+                            <div className="flex justify-between items-center mb-6">
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-900 antialiased">최종 메인 대본 파싱</h3>
+                                    <p className="text-sm text-gray-600 mt-1">이전 단계에서 확정된 스케일과 다수 인물 설정을 모두 결합하여 제미나이(Gemini 2.5)가 전체 대본 구조를 짭니다.</p>
+                                </div>
+                            </div>
+
+                            {errorMsg && (
+                                <div className="text-red-500 text-sm font-medium mb-4">{errorMsg}</div>
+                            )}
+
+                            <div className="flex justify-end pt-4 border-t">
+                                <Button
+                                    onClick={handleGenerate}
+                                    disabled={isGenerating || !characterSheet}
+                                    className="w-[300px] bg-[#6a35ff] hover:bg-[#5b2bd6] text-white font-semibold py-6 text-lg rounded-lg shadow-sm"
+                                >
+                                    <Sparkles className="w-5 h-5 mr-3" />
+                                    {isGenerating ? '대본 작성 중...' : '맞춤형 스토리 대본 생성하기'}
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* 결과 화면 패널 */}
+                    {(localScript || titles.length > 0) && (
+                        <Card className="border shadow-sm bg-white rounded-xl">
+                            <CardContent className="p-8">
+                                <div className="flex justify-between items-center mb-6 border-b pb-4">
+                                    <h3 className="text-lg font-bold text-gray-900 antialiased">AI 대본 생성 결과</h3>
+                                    <Button className="bg-[#0f52ba] hover:bg-blue-700 text-white font-semibold shadow-sm text-xs h-8">
+                                        텍스트 본문 복사
+                                    </Button>
+                                </div>
+
+                                <div className="space-y-8">
+                                    {/* 0. 메인 스토리 대본 */}
+                                    <div className="border rounded-xl p-6 bg-slate-50/50 border-blue-200">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <FileText className="w-5 h-5 text-blue-600" />
+                                            <h4 className="font-bold text-blue-900 text-base">유튜브 스토리 대본 본문</h4>
+                                        </div>
+                                        <Textarea
+                                            value={localScript}
+                                            onChange={(e) => {
+                                                setLocalScript(e.target.value);
+                                                setScript(e.target.value); // Sync to store
+                                            }}
+                                            className="min-h-[600px] bg-white border-gray-200 text-sm text-gray-800 focus-visible:ring-1 focus-visible:ring-blue-500 leading-relaxed font-mono whitespace-pre-wrap shadow-inner"
+                                        />
+                                    </div>
+
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
+            </div>
+
+            {/* ----------------- HISTORY RIGHT SIDEBAR ----------------- */}
+            <div className={`w-[320px] bg-white border-l border-gray-200 flex flex-col h-full shadow-2xl transition-transform duration-300 ease-in-out absolute top-0 right-0 bottom-0 z-20 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                    <h2 className="font-bold text-gray-900 flex items-center gap-2">
+                        <Save className="w-5 h-5 text-indigo-600" />
+                        기획안 보관함
+                    </h2>
+                    <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)}>
+                        <ChevronRight className="w-5 h-5" />
+                    </Button>
                 </div>
 
-                {/* 생성 조건 컨트롤 패널 */}
-                <Card className="border shadow-sm bg-white rounded-xl mb-8">
-                    <CardContent className="p-8">
-                        <h3 className="text-lg font-bold text-gray-900 mb-6 antialiased">생성 옵션 설정</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            {/* 제목 강조 포인트 */}
-                            <div className="space-y-2">
-                                <Label className="text-sm font-semibold text-gray-900">제목 강조 포인트</Label>
-                                <Select defaultValue="hook">
-                                    <SelectTrigger className="w-full bg-white">
-                                        <SelectValue placeholder="강조 포인트 선택" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="hook">강렬한 후킹 (클릭 유도)</SelectItem>
-                                        <SelectItem value="emotion">감성/서사 중심</SelectItem>
-                                        <SelectItem value="info">정보 전달/핵심 요약</SelectItem>
-                                        <SelectItem value="mystery">호기심 자극 (미스터리)</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {/* 내용 강조 포인트 */}
-                            <div className="space-y-2">
-                                <Label className="text-sm font-semibold text-gray-900">내용(더보기란) 강조 포인트</Label>
-                                <Select defaultValue="summary">
-                                    <SelectTrigger className="w-full bg-white">
-                                        <SelectValue placeholder="강조 포인트 선택" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="summary">전체 스토리 요약 중심</SelectItem>
-                                        <SelectItem value="character">캐릭터 매력 강조</SelectItem>
-                                        <SelectItem value="world">상세한 세계관 설명</SelectItem>
-                                        <SelectItem value="callToAction">참여 유도 (구독/좋아요 강조)</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {/* 이모지 사용량 */}
-                            <div className="space-y-2">
-                                <Label className="text-sm font-semibold text-gray-900">이모지 활용도</Label>
-                                <Select defaultValue="moderate">
-                                    <SelectTrigger className="w-full bg-white">
-                                        <SelectValue placeholder="이모지 사용량 선택" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="none">사용 안 함 (진중한 톤)</SelectItem>
-                                        <SelectItem value="light">가볍게 포인트만 (1~2개)</SelectItem>
-                                        <SelectItem value="moderate">적절히 사용 (기본)</SelectItem>
-                                        <SelectItem value="heavy">적극 방출 (눈에 띄게✨🔥)</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                    {scriptHistory.length === 0 ? (
+                        <div className="text-center py-10 px-4 text-xs text-gray-400">
+                            저장된 기획안이 없습니다.<br />
+                            대본을 뽑을 때마다 자동으로 이곳에 저장됩니다. (새로고침해도 날아가지 않습니다)
                         </div>
-
-                        <div className="flex justify-end pt-4 border-t">
-                            <Button className="w-[180px] bg-[#6a35ff] hover:bg-[#5b2bd6] text-white font-semibold py-5 rounded-lg shadow-sm">
-                                <Sparkles className="w-4 h-4 mr-2" />
-                                맞춤형 제목/내용 생성
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* 결과 화면 패널 */}
-                <Card className="border shadow-sm bg-white rounded-xl">
-                    <CardContent className="p-8">
-                        <div className="flex justify-between items-center mb-6 border-b pb-4">
-                            <h3 className="text-lg font-bold text-gray-900 antialiased">AI 메타데이터 제안 결과</h3>
-                            <Button className="bg-[#0f52ba] hover:bg-blue-700 text-white font-semibold shadow-sm">
-                                텍스트 전체 복사
-                            </Button>
-                        </div>
-
-                        <div className="space-y-8">
-                            {/* 1. 추천 제목 풀 */}
-                            <div className="border rounded-xl p-6 bg-slate-50/50">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <Sparkles className="w-5 h-5 text-blue-600" />
-                                    <h4 className="font-bold text-gray-900 text-sm">추천 유튜브 제목 (클릭 유도)</h4>
+                    ) : (
+                        scriptHistory.map((history, idx) => (
+                            <div key={history.id} className="border border-gray-200 rounded-lg p-4 bg-white hover:border-indigo-300 hover:shadow-md transition-all group cursor-pointer" onClick={() => loadHistory(history)}>
+                                <div className="flex justify-between items-start mb-2">
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">통합기획 {scriptHistory.length - idx}안</span>
+                                    <span className="text-[10px] text-gray-400">{(() => { try { const d = new Date(history.timestamp); return isNaN(d.getTime()) ? history.timestamp : format(d, "MM/dd HH:mm"); } catch { return history.timestamp || '날짜 없음'; } })()}</span>
                                 </div>
-                                <div className="space-y-3">
-                                    <div className="flex items-start gap-2 p-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-medium hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-colors group">
-                                        <span className="text-gray-400 group-hover:text-blue-500 mt-0.5">•</span>
-                                        [단독공개] 천재 해커가 3년 동안 모습을 감췄던 진짜 이유... "Ghost"의 귀환 💻🔥
-                                    </div>
-                                    <div className="flex items-start gap-2 p-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-medium hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-colors group">
-                                        <span className="text-gray-400 group-hover:text-blue-500 mt-0.5">•</span>
-                                        "내 복수는 코드로 시작된다" 뒷세계 1위 해커 차윤서의 미친 침투 실력 ㄷㄷ (사이버펑크 스릴러)
-                                    </div>
-                                    <div className="flex items-start gap-2 p-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 font-medium hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-colors group">
-                                        <span className="text-gray-400 group-hover:text-blue-500 mt-0.5">•</span>
-                                        완벽했던 해커의 단 한 번의 실수... 그리고 시작된 치명적인 사랑 이야기 💔
-                                    </div>
+                                <h4 className="font-bold text-gray-900 text-sm mb-1 line-clamp-2">{history.title || "제목 없음"}</h4>
+                                <div className="flex gap-1 mb-3">
+                                    {history.endingStyle === 'cliffhanger' && (
+                                        <span className="text-[10px] text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">시리즈물({history.episodeCount}부작)</span>
+                                    )}
+                                </div>
+                                <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-3">
+                                    {history.script?.slice(0, 80) || "대본 없음"}...
+                                </p>
+                                <div className="flex justify-end gap-2 border-t border-gray-50 pt-3">
+                                    <Button
+                                        variant="ghost" size="sm"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            deleteScriptFromHistory(history.id);
+                                        }}
+                                        className="h-7 text-xs text-red-500 hover:bg-red-50 hover:text-red-600 px-2"
+                                    >
+                                        <Trash2 className="w-3 h-3 mr-1" />
+                                        삭제
+                                    </Button>
+                                    <Button
+                                        variant="secondary" size="sm"
+                                        className="h-7 text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3"
+                                        onClick={(e) => { e.stopPropagation(); loadHistory(history); }}
+                                    >
+                                        불러오기
+                                    </Button>
                                 </div>
                             </div>
-
-                            {/* 2. 유튜브 더보기란: 요약 및 타임라인 */}
-                            <div className="border rounded-xl p-6 bg-slate-50/50">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <FileText className="w-5 h-5 text-emerald-600" />
-                                    <h4 className="font-bold text-gray-900 text-sm">유튜브 더보기란 (설명 및 타임라인)</h4>
-                                </div>
-                                <Textarea
-                                    readOnly
-                                    defaultValue="최고의 실력을 갖춘 천재 해커 차윤서('Ghost').
-3년 전의 사건으로 은둔하던 그녀가 다시 키보드 앞에 앉았다.
-차갑고 예민한 외면 뒤에 숨겨진 그녀의 진짜 목적은 무엇일까?
-그리고 그녀의 완벽한 코드에 예상치 못한 '버그'가 생기기 시작하는데...
-
-네온사인 가득한 사이버펑크 도시에서 펼쳐지는 치명적인 로맨스 스릴러!
-
-[타임라인]
-00:00 - Ghost, 3년 만의 시스템 접속
-01:45 - 첫 번째 타겟: 코퍼레이션 보안망 뚫기
-04:12 - 뜻밖의 에러, 그리고 그 남자와의 첫 만남
-08:30 - 해커의 사랑이야기 메인 테마
-12:00 - 복수와 사랑 사이에서의 갈등
-
-구독과 좋아요, 알림 설정은 엄청난 시너지를 만듭니다! ✨"
-                                    className="min-h-[250px] bg-white border-gray-200 resize-none text-sm text-gray-800 focus-visible:ring-1 focus-visible:ring-blue-500 leading-relaxed font-mono whitespace-pre-wrap"
-                                />
-                            </div>
-
-                            {/* 3. 추천 해시태그 */}
-                            <div className="border rounded-xl p-6 bg-slate-50/50">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <Hash className="w-5 h-5 text-purple-600" />
-                                    <h4 className="font-bold text-gray-900 text-sm">추천 해시태그</h4>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                    {['#해커', '#사이버펑크', '#로맨스스릴러', '#차윤서', '#Ghost', '#웹소설원작', '#AI단편영화'].map((tag) => (
-                                        <span key={tag} className="px-3 py-1 bg-purple-100 text-purple-700 hover:bg-purple-200 cursor-pointer transition-colors text-xs font-semibold rounded-full">
-                                            {tag}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                    </CardContent>
-                </Card>
+                        ))
+                    )}
+                </div>
             </div>
+
         </div>
     );
 }

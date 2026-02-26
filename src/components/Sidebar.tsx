@@ -7,25 +7,33 @@ import {
   BookOpen,
   Type,
   Video,
-  Image as ImageIcon,
   Sparkles,
   ExternalLink,
   Settings,
   Globe,
-  Youtube
+  Youtube,
+  BrainCircuit,
+  Image as ImageIconFallback,
+  Music,
+  Upload
 } from 'lucide-react';
 import Link from 'next/link';
+import { useStoryStore } from '@/store/useStoryStore';
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { videoFormat } = useStoryStore();
 
   const menuItems = [
     { name: '기본 설정', href: '/', icon: FileText },
-    { name: '스토리 대본', href: '/story-script', icon: BookOpen },
-    { name: '제목/내용 생성', href: '/title-content', icon: Type },
-    { name: '영상 제작', href: '/video-creation', icon: Video },
-    { name: '썸네일 제작', href: '/thumbnail-creation', icon: ImageIcon },
-    { name: '비주얼 프롬프트', href: '/visual-prompt', icon: Sparkles },
+    { name: '기획 및 줄거리', href: '/synopsis', icon: BrainCircuit },
+    ...(videoFormat === 'drama'
+      ? [{ name: '캐릭터 룩북 기획', href: '/story-script', icon: BookOpen }]
+      : []),
+    { name: '대본 생성', href: '/title-content', icon: Type },
+    { name: '비주얼 스튜디오', href: '/visual-studio', icon: Sparkles },
+    { name: '썸네일', href: '/thumbnail-creation', icon: ImageIconFallback },
+    { name: '오디오/더빙', href: '/audio-dubbing', icon: Music },
     { name: '유튜브 업로드', href: '/youtube-upload', icon: Youtube },
   ];
 
