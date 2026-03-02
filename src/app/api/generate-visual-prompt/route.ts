@@ -7,12 +7,23 @@ export async function POST(req: Request) {
         const body = await req.json();
         const { tone, synopsis, characterSheet, visualStyle, lighting, cameraAngle } = body;
 
+        // 스타일별 프롬프트 접두어 결정
+        const isRealisticStyle = ['cinematic', 'photorealistic', 'cyberpunk', 'vintage'].includes(visualStyle);
+
+        const styleGuide = isRealisticStyle
+            ? `이 프로젝트의 비주얼 스타일은 "${visualStyle}" (실사/영화적) 입니다.
+모든 캐릭터 프롬프트는 반드시 "cinematic movie still, dramatic lighting, film photography," 같은 실사 영화 키워드로 시작하세요.
+"illustration", "anime", "cartoon", "character design", "stylized", "painting" 같은 비실사 키워드는 절대 사용하지 마세요.
+인물은 실제 영화 배우처럼 사실적으로 묘사해야 합니다.`
+            : `이 프로젝트의 비주얼 스타일은 "${visualStyle}" (일러스트레이션) 입니다.
+모든 캐릭터 프롬프트는 해당 스타일에 맞는 키워드 (예: "anime illustration,", "3D Pixar style,", "webtoon art," 등)로 시작하세요.`;
+
         const prompt = `
-You are a world-class AI image prompt engineer specializing in creating prompts that are safe and compliant with AI image generation policies.
+You are a world-class AI image prompt engineer.
 
-Based on the [Synopsis] and [Character Sheet] provided, create a set of English keyword prompts for AI image generators (Midjourney, Stable Diffusion, Gemini Imagen, etc.).
+Based on the [Synopsis] and [Character Sheet], create English keyword prompts for AI image generators.
 
-Prompts should include: 1 "Main Opening Scene" (overall atmosphere/poster) + individual "Solo Shot" prompts for EVERY character in the character sheet.
+Create: 1 "Main Opening Scene" (atmosphere/poster) + individual "Solo Shot" for EVERY character.
 
 [Project Info]
 - Visual Style: ${visualStyle}
@@ -26,44 +37,42 @@ ${synopsis}
 [Character Sheet]
 ${characterSheet}
 
-=== CRITICAL SAFETY RULES (MUST FOLLOW) ===
-AI 이미지 생성 서비스들의 안전 정책에 걸리지 않도록 반드시 아래 규칙을 지켜야 합니다:
+=== STYLE DIRECTION ===
+${styleGuide}
 
-**절대 사용 금지 키워드** (이 단어들이 프롬프트에 포함되면 이미지 생성이 거부됩니다):
-- ❌ 구체적 나이 숫자: "73 years old", "25 years old" 등 → 대신 "mature", "youthful", "seasoned" 같은 형용사 사용
-- ❌ 특정 인종/민족: "Korean", "Asian", "Japanese", "Chinese" 등 → 절대 국적이나 인종을 명시하지 마세요
-- ❌ "elderly", "old man", "old woman" → 대신 "silver-haired", "wise-looking", "dignified figure" 사용
-- ❌ "closeup" 단독 사용 → "character portrait, upper body shot" 또는 "medium shot" 사용
-- ❌ 실제 사람 이름 (Park Seon-yeong 등) → 프롬프트에 캐릭터 이름을 넣지 마세요
-- ❌ "realistic", "real person", "photograph" (실사 스타일이 아닌 경우)
-- ❌ 피부색 구체 묘사: "fair skin", "dark skin" 등
+=== SAFETY RULES (반드시 지켜야 합니다 - 안 지키면 이미지 생성이 차단됩니다) ===
 
-**반드시 사용해야 하는 안전한 대체 표현**:
-- ✅ 나이 대신 → 분위기로 표현: "character with silver streaked hair and gentle smile lines", "youthful energetic character"
-- ✅ 민족 대신 → 스타일로 표현: 의상, 헤어스타일, 액세서리, 분위기로만 표현
-- ✅ 인물 묘사 → "illustrated character", "stylized portrait", "character design" 접두어 사용
-- ✅ 모든 캐릭터 프롬프트는 "character design, stylized illustration," 또는 해당 visual style 키워드로 시작
-- ✅ 캐릭터 이름 대신 → "target" 필드에만 이름 사용, prompt에는 절대 넣지 말 것
+**절대 금지 (이 단어가 있으면 100% 차단됩니다)**:
+1. ❌ 구체적 나이 숫자 금지: "73 years old", "25 years old" → 대신 외모 특징으로: "with silver-streaked hair and gentle laugh lines", "youthful vibrant look"
+2. ❌ 국적/인종/민족 금지: "Korean", "Asian", "Japanese", "Chinese", "East Asian" → 완전히 삭제, 대신 의상/헤어/분위기로 간접 표현
+3. ❌ "elderly", "old man", "old woman" 금지 → "graceful mature figure", "silver-haired dignified person"
+4. ❌ 캐릭터 이름 금지: "Park Seon-yeong" → prompt에 이름 넣지 말 것 (target에만 사용)
+5. ❌ "closeup" 단독 금지 → "medium shot, upper body framing" 또는 "portrait composition"
+
+**✅ 안전한 표현 방법**:
+- 나이 → 외모 특징으로 대체: hair color (silver, dark, auburn), facial features (laugh lines, bright eyes), overall demeanor
+- 민족성 → 환경과 소품으로 암시: 한옥 배경, 전통 차(tea), 골목길, 시장, 벚꽃 등 배경과 소품을 활용
+- 실사 스타일에서는 "cinematic", "movie still", "35mm film", "shallow depth of field" 같은 영화적 키워드를 적극 사용
+- "closeup" 대신 → "portrait composition", "medium close-up", "bust shot"
 
 [Output Rules]
 1. All prompts MUST be in **English only**.
-2. **koreanDescription**: Explain each prompt in Korean (2-3 sentences) for non-experts to understand.
-3. Prompts should be comma-separated keywords/short phrases, NOT full sentences.
-4. Include visual quality keywords: 8k, masterpiece, highly detailed, best quality
-5. Include style-specific keywords matching the selected visual style
-6. Output ONLY the JSON array below. No greetings, no markdown code blocks.
+2. **koreanDescription**: 각 프롬프트의 한글 설명 (2-3문장, 비전문가도 이해 가능하게)
+3. Comma-separated keywords/phrases (NOT full sentences)
+4. Must include quality keywords: 8k, masterpiece, highly detailed
+5. Output ONLY the JSON array. No markdown code blocks.
 
-[Response Format (output ONLY this JSON Array)]
+[Response Format]
 [
   {
     "target": "메인 오프닝 씬 (전체 배경 또는 포스터)",
-    "prompt": "english keywords here...",
-    "koreanDescription": "이 프롬프트에 대한 한글 해석."
+    "prompt": "english keywords...",
+    "koreanDescription": "한글 해석"
   },
   {
-    "target": "캐릭터명 (주인공, 단독 샷)",
-    "prompt": "character design, stylized illustration, english keywords here...",
-    "koreanDescription": "이 캐릭터의 외형과 분위기를 한글로 설명."
+    "target": "캐릭터명 (역할, 단독 샷)",
+    "prompt": "cinematic movie still, ... (실사) 또는 anime illustration, ... (애니)",
+    "koreanDescription": "한글 해석"
   }
 ]
 `;
