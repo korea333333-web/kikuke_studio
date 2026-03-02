@@ -56,6 +56,8 @@ export default function VisualStudioPage() {
 
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [isGeneratingCuts, setIsGeneratingCuts] = useState(false);
+    const [isGeneratingAllCuts, setIsGeneratingAllCuts] = useState(false);
+    const [allCutsProgress, setAllCutsProgress] = useState({ current: 0, total: 0 });
     const [error, setError] = useState<string | null>(null);
     const [copiedCutId, setCopiedCutId] = useState<string | null>(null);
     const [expandedCuts, setExpandedCuts] = useState<Record<string, boolean>>({});
@@ -346,6 +348,60 @@ export default function VisualStudioPage() {
         } finally {
             setIsGeneratingCuts(false);
         }
+    };
+
+    // ====== 전체 씬 컷 일괄 생성 ======
+    const handleGenerateAllCuts = async () => {
+        setIsGeneratingAllCuts(true);
+        setError(null);
+        const scenesWithoutCuts = scenes.filter(s => s.cuts.length === 0);
+        setAllCutsProgress({ current: 0, total: scenesWithoutCuts.length });
+
+        let completed = 0;
+        for (let i = 0; i < scenes.length; i++) {
+            // 이미 컷이 있는 씬은 건너뛰기
+            if (scenes[i].cuts.length > 0) continue;
+
+            try {
+                setIsGeneratingCuts(true);
+                const response = await fetch('/api/generate-cuts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sceneTitle: scenes[i].title,
+                        sceneDescription: scenes[i].description,
+                        scriptExcerpt: '',
+                        characterSheet,
+                        visualStyle,
+                        cameraAngle,
+                        lighting,
+                    }),
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || `씬 ${i + 1} 컷 생성 실패`);
+
+                updateSceneCuts(i, data.cuts);
+                completed++;
+                setAllCutsProgress(prev => ({ ...prev, current: completed }));
+
+                // API 한도 관리: 3초 간격
+                if (completed < scenesWithoutCuts.length) {
+                    await delay(3000);
+                }
+            } catch (err: any) {
+                if (err.message?.includes('한도') || err.message?.includes('429')) {
+                    setError(`씬 ${i + 1}에서 API 한도 초과. 잠시 후 다시 시도해주세요.`);
+                    break;
+                }
+                console.error(`씬 ${i + 1} 컷 생성 실패:`, err);
+                completed++;
+                setAllCutsProgress(prev => ({ ...prev, current: completed }));
+            }
+        }
+
+        setIsGeneratingCuts(false);
+        setIsGeneratingAllCuts(false);
     };
 
     // ====== 씬별 컷 이미지 생성 ======
@@ -806,8 +862,58 @@ export default function VisualStudioPage() {
                     {/* 구분선 */}
                     <div className="mx-6 border-t border-gray-200" />
 
-                    {/* ===== 2단계: 씬별 컷 이미지 생성 영역 ===== */}
-                    <div className="px-6 pt-5 pb-8">
+                    {/* ===== 전체 컷 일괄 생성 버튼 영역 ===== */}
+                    <div className="px-6 pt-4 pb-2">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Layers className="w-5 h-5 text-orange-500" />
+                                <h3 className="text-base font-bold text-gray-900">2단계: 씬별 컷(Cut) & 프롬프트</h3>
+                                <span className="text-xs text-gray-400">
+                                    ({scenes.filter(s => s.cuts.length > 0).length}/{scenes.length} 씬 완료)
+                                </span>
+                            </div>
+                            <button
+                                onClick={handleGenerateAllCuts}
+                                disabled={isGeneratingAllCuts || isGeneratingCuts || scenes.every(s => s.cuts.length > 0)}
+                                className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-orange-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            >
+                                {isGeneratingAllCuts ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        {allCutsProgress.current}/{allCutsProgress.total} 씬 처리 중...
+                                    </>
+                                ) : scenes.every(s => s.cuts.length > 0) ? (
+                                    <>
+                                        <Check className="w-4 h-4" />
+                                        전체 완료
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="w-4 h-4" />
+                                        전체 씬 컷 일괄 생성
+                                    </>
+                                )}
+                            </button>
+                        </div>
+
+                        {/* 일괄 생성 진행률 바 */}
+                        {isGeneratingAllCuts && (
+                            <div className="mt-3">
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div
+                                        className="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full transition-all duration-500"
+                                        style={{ width: `${allCutsProgress.total > 0 ? (allCutsProgress.current / allCutsProgress.total) * 100 : 0}%` }}
+                                    />
+                                </div>
+                                <p className="text-xs text-gray-400 mt-1 text-center">
+                                    {allCutsProgress.current}/{allCutsProgress.total} 씬 컷 생성 완료 · API 한도 관리를 위해 3초 간격으로 처리합니다
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* ===== 선택된 씬 컷 상세 영역 ===== */}
+                    <div className="px-6 pt-2 pb-8">
                         {selectedScene ? (
                             <div>
                                 {/* 씬 헤더 */}
@@ -1125,8 +1231,8 @@ export default function VisualStudioPage() {
                                                                                             key={d}
                                                                                             onClick={() => setVideoDuration(d)}
                                                                                             className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${videoDuration === d
-                                                                                                    ? 'bg-indigo-500 text-white'
-                                                                                                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                                                                                ? 'bg-indigo-500 text-white'
+                                                                                                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                                                                                                 }`}
                                                                                         >
                                                                                             {d}초
