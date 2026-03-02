@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 
-const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
-console.log("Gemini API Key Loaded:", !!process.env.NEXT_PUBLIC_GEMINI_API_KEY);
-
 export async function POST(req: Request) {
+  const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
   try {
     const body = await req.json();
     const { videoFormat, topic, targetAudience, tone } = body;

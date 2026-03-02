@@ -4,9 +4,8 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
-
 export async function POST(req: Request) {
+    const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
     if (!process.env.NEXT_PUBLIC_GEMINI_API_KEY) {
         return NextResponse.json(
             { error: "Gemini API 키가 설정되지 않았습니다." },

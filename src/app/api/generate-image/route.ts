@@ -1,45 +1,41 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 
-const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
-
-// 스타일 매핑 (generate-scene-image와 동일하게 유지)
-const styleMap: Record<string, string> = {
-    cinematic: 'cinematic live-action movie still, realistic human actors, real-world photography, 35mm film, shallow depth of field, anamorphic lens flare, color graded like a Hollywood blockbuster, NOT anime NOT cartoon NOT illustration NOT painting',
-    photorealistic: 'photorealistic DSLR photograph, ultra realistic, real human faces, real skin texture, Canon EOS R5, 85mm lens, documentary photography style, NOT anime NOT cartoon NOT illustration NOT painting',
-    ghibli: 'Studio Ghibli hand-drawn anime style, 2D cel animation, soft pastel watercolor backgrounds, whimsical anime characters, Hayao Miyazaki art direction, NOT photorealistic NOT live-action NOT 3D render',
-    pixar: 'Pixar Disney 3D CGI animation style, smooth 3D rendered characters, vibrant saturated colors, cute rounded proportions, subsurface scattering on skin, Pixar movie screenshot, NOT photorealistic NOT live-action NOT 2D anime',
-    webtoon: 'Korean manhwa webtoon digital illustration style, clean sharp lineart, cel-shaded coloring, detailed manga-style characters, webtoon panel composition, NOT photorealistic NOT live-action NOT 3D',
-    watercolor: 'traditional watercolor painting illustration, visible brush strokes, soft color bleeding and blending, storybook art style, hand-painted aesthetic, NOT photorealistic NOT live-action NOT anime',
-    cyberpunk: 'cyberpunk neon noir style, futuristic cityscape, glowing neon lights, rain-soaked reflections, Blade Runner aesthetic, dark atmosphere with vibrant neon accents, cinematic cyberpunk',
-    vintage: 'vintage 1970s analog film photography, Kodak Portra 400 film grain, warm amber tones, faded retro color palette, soft vignette, 70s fashion and decor aesthetic, retro film camera look',
-};
-
-const cameraMap: Record<string, string> = {
-    dynamic: 'dynamic camera angle, dramatic perspective, tilted composition',
-    wide: 'ultra wide establishing shot, panoramic view, full scene visible',
-    closeup: 'intimate close-up shot, detailed facial features, shallow depth of field',
-    drone: 'aerial drone shot, overhead birds-eye view, cinematic flyover',
-    handheld: 'handheld camera POV, natural slight motion blur, vlog style',
-    lowangle: 'dramatic low angle shot, looking upward, heroic imposing perspective',
-};
-
-const lightMap: Record<string, string> = {
-    dramatic: 'dramatic chiaroscuro lighting, high contrast shadows, volumetric light rays',
-    natural: 'natural outdoor sunlight, warm daylight, soft ambient illumination',
-    neon: 'neon glow lighting, colorful neon signs reflecting, electric atmosphere',
-    moody: 'moody low-key lighting, dark shadows, atmospheric tension, noir',
-    soft: 'soft diffused studio lighting, dreamy warm glow, even illumination',
-    golden_hour: 'golden hour sunset lighting, warm orange-pink glow, long shadows, magic hour',
-};
-
 export async function POST(req: Request) {
+    const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
     if (!process.env.NEXT_PUBLIC_GEMINI_API_KEY) {
         return NextResponse.json(
             { error: "Gemini API 키가 설정되지 않았습니다." },
             { status: 500 }
         );
     }
+
+    const styleMap: Record<string, string> = {
+        cinematic: 'cinematic live-action movie still, realistic human actors, real-world photography, 35mm film, shallow depth of field, anamorphic lens flare, color graded like a Hollywood blockbuster, NOT anime NOT cartoon NOT illustration NOT painting',
+        photorealistic: 'photorealistic DSLR photograph, ultra realistic, real human faces, real skin texture, Canon EOS R5, 85mm lens, documentary photography style, NOT anime NOT cartoon NOT illustration NOT painting',
+        ghibli: 'Studio Ghibli hand-drawn anime style, 2D cel animation, soft pastel watercolor backgrounds, whimsical anime characters, Hayao Miyazaki art direction, NOT photorealistic NOT live-action NOT 3D render',
+        pixar: 'Pixar Disney 3D CGI animation style, smooth 3D rendered characters, vibrant saturated colors, cute rounded proportions, subsurface scattering on skin, Pixar movie screenshot, NOT photorealistic NOT live-action NOT 2D anime',
+        webtoon: 'Korean manhwa webtoon digital illustration style, clean sharp lineart, cel-shaded coloring, detailed manga-style characters, webtoon panel composition, NOT photorealistic NOT live-action NOT 3D',
+        watercolor: 'traditional watercolor painting illustration, visible brush strokes, soft color bleeding and blending, storybook art style, hand-painted aesthetic, NOT photorealistic NOT live-action NOT anime',
+        cyberpunk: 'cyberpunk neon noir style, futuristic cityscape, glowing neon lights, rain-soaked reflections, Blade Runner aesthetic, dark atmosphere with vibrant neon accents, cinematic cyberpunk',
+        vintage: 'vintage 1970s analog film photography, Kodak Portra 400 film grain, warm amber tones, faded retro color palette, soft vignette, 70s fashion and decor aesthetic, retro film camera look',
+    };
+    const cameraMap: Record<string, string> = {
+        dynamic: 'dynamic camera angle, dramatic perspective, tilted composition',
+        wide: 'ultra wide establishing shot, panoramic view, full scene visible',
+        closeup: 'intimate close-up shot, detailed facial features, shallow depth of field',
+        drone: 'aerial drone shot, overhead birds-eye view, cinematic flyover',
+        handheld: 'handheld camera POV, natural slight motion blur, vlog style',
+        lowangle: 'dramatic low angle shot, looking upward, heroic imposing perspective',
+    };
+    const lightMap: Record<string, string> = {
+        dramatic: 'dramatic chiaroscuro lighting, high contrast shadows, volumetric light rays',
+        natural: 'natural outdoor sunlight, warm daylight, soft ambient illumination',
+        neon: 'neon glow lighting, colorful neon signs reflecting, electric atmosphere',
+        moody: 'moody low-key lighting, dark shadows, atmospheric tension, noir',
+        soft: 'soft diffused studio lighting, dreamy warm glow, even illumination',
+        golden_hour: 'golden hour sunset lighting, warm orange-pink glow, long shadows, magic hour',
+    };
 
     try {
         const { prompt, visualStyle, cameraAngle, lighting } = await req.json();

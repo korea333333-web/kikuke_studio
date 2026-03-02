@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 
-const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
-
 export async function POST(req: Request) {
+    const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
     try {
         const body = await req.json();
         const { sceneTitle, sceneDescription, scriptExcerpt, characterSheet, visualStyle, cameraAngle, lighting } = body;
