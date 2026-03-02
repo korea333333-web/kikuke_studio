@@ -8,43 +8,62 @@ export async function POST(req: Request) {
         const { tone, synopsis, characterSheet, visualStyle, lighting, cameraAngle } = body;
 
         const prompt = `
-당신은 최고의 AI 이미지 생성 프롬프트 엔지니어입니다.
-제공된 [시놉시스]와 [캐릭터 시트]를 바탕으로, 미드저니(Midjourney)나 스테이블 디퓨전(Stable Diffusion) 같은 AI 이미지 생성기에 똑같이 복사해서 넣을 수 있는 '영문 키워드 프롬프트'들을 여러 개 작성해 주세요.
+You are a world-class AI image prompt engineer specializing in creating prompts that are safe and compliant with AI image generation policies.
 
-이 프롬프트들은 전체 분위기를 보여주는 '메인 배경/오프닝 씬' 1장과, 각 캐릭터별 '개별 단독 샷' 프롬프트들로 구성되어야 합니다.
-**캐릭터 시트에 등장하는 모든 인물에 대해 빠짐없이 개별 프롬프트를 작성하세요.**
+Based on the [Synopsis] and [Character Sheet] provided, create a set of English keyword prompts for AI image generators (Midjourney, Stable Diffusion, Gemini Imagen, etc.).
 
-[기획 정보]
-- 시각화 스타일: ${visualStyle}
-- 톤앤매너: ${tone}
-${lighting ? `- 메인 조명: ${lighting}` : ''}
-${cameraAngle ? `- 기본 카메라 무빙: ${cameraAngle}` : ''}
+Prompts should include: 1 "Main Opening Scene" (overall atmosphere/poster) + individual "Solo Shot" prompts for EVERY character in the character sheet.
 
-[줄거리 (시놉시스)]
+[Project Info]
+- Visual Style: ${visualStyle}
+- Tone & Mood: ${tone}
+${lighting ? `- Lighting: ${lighting}` : ''}
+${cameraAngle ? `- Camera: ${cameraAngle}` : ''}
+
+[Synopsis]
 ${synopsis}
 
-[캐릭터 시트]
+[Character Sheet]
 ${characterSheet}
 
-[요구사항]
-1. 반드시 프롬프트(prompt) 내용은 모두 **영어(English)**로만 작성하세요. 
-2. **한글 해석(koreanDescription)**: 각 영문 프롬프트가 어떤 장면/인물을 묘사하는지 한국어로 2~3문장 정도 설명해주세요. 비전문가도 쉽게 이해할 수 있어야 합니다.
-3. 프롬프트는 완전한 문장이 아니라, 쉼표(,)로 구분된 단어나 짧은 구(phrase)의 조합으로 작성해 주세요.
-4. 카메라 앵글, 조명, 렌즈 느낌, 배경 분위기, 화질(ex. 8k, masterpiece, highly detailed) 등의 시각적 퀄리티업 키워드를 필수로 포함하세요.
-5. 캐릭터 개별 프롬프트의 경우, 각 인물의 외모(머리 색, 헤어스타일, 옷 스타일, 표정)를 구체적으로 요약해서 키워드로 넣으세요.
-6. 오직 아래 JSON 배열 포맷에 맞춘 결과물만 출력하세요. 다른 인사말이나 설명, 마크다운 코드블록(\`\`\`)은 절대 금지합니다.
+=== CRITICAL SAFETY RULES (MUST FOLLOW) ===
+AI 이미지 생성 서비스들의 안전 정책에 걸리지 않도록 반드시 아래 규칙을 지켜야 합니다:
 
-[응답 포맷 (반드시 JSON Array 본문만 출력)]
+**절대 사용 금지 키워드** (이 단어들이 프롬프트에 포함되면 이미지 생성이 거부됩니다):
+- ❌ 구체적 나이 숫자: "73 years old", "25 years old" 등 → 대신 "mature", "youthful", "seasoned" 같은 형용사 사용
+- ❌ 특정 인종/민족: "Korean", "Asian", "Japanese", "Chinese" 등 → 절대 국적이나 인종을 명시하지 마세요
+- ❌ "elderly", "old man", "old woman" → 대신 "silver-haired", "wise-looking", "dignified figure" 사용
+- ❌ "closeup" 단독 사용 → "character portrait, upper body shot" 또는 "medium shot" 사용
+- ❌ 실제 사람 이름 (Park Seon-yeong 등) → 프롬프트에 캐릭터 이름을 넣지 마세요
+- ❌ "realistic", "real person", "photograph" (실사 스타일이 아닌 경우)
+- ❌ 피부색 구체 묘사: "fair skin", "dark skin" 등
+
+**반드시 사용해야 하는 안전한 대체 표현**:
+- ✅ 나이 대신 → 분위기로 표현: "character with silver streaked hair and gentle smile lines", "youthful energetic character"
+- ✅ 민족 대신 → 스타일로 표현: 의상, 헤어스타일, 액세서리, 분위기로만 표현
+- ✅ 인물 묘사 → "illustrated character", "stylized portrait", "character design" 접두어 사용
+- ✅ 모든 캐릭터 프롬프트는 "character design, stylized illustration," 또는 해당 visual style 키워드로 시작
+- ✅ 캐릭터 이름 대신 → "target" 필드에만 이름 사용, prompt에는 절대 넣지 말 것
+
+[Output Rules]
+1. All prompts MUST be in **English only**.
+2. **koreanDescription**: Explain each prompt in Korean (2-3 sentences) for non-experts to understand.
+3. Prompts should be comma-separated keywords/short phrases, NOT full sentences.
+4. Include visual quality keywords: 8k, masterpiece, highly detailed, best quality
+5. Include style-specific keywords matching the selected visual style
+6. Output ONLY the JSON array below. No greetings, no markdown code blocks.
+
+[Response Format (output ONLY this JSON Array)]
 [
   {
     "target": "메인 오프닝 씬 (전체 배경 또는 포스터)",
     "prompt": "english keywords here...",
-    "koreanDescription": "이 프롬프트에 대한 한글 해석. 어떤 장면인지 쉽게 설명."
+    "koreanDescription": "이 프롬프트에 대한 한글 해석."
   },
   {
-    "target": "캐릭터명1 (단독 샷)",
-    "prompt": "english keywords here...",
-    "koreanDescription": "이 캐릭터의 외형과 분위기를 한글로 풀어 설명."
+    "target": "캐릭터명 (주인공, 단독 샷)",
+    "prompt": "character design, stylized illustration, english keywords here...",
+    "koreanDescription": "이 캐릭터의 외형과 분위기를 한글로 설명."
   }
 ]
 `;
