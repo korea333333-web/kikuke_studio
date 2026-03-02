@@ -112,7 +112,13 @@ export default function ScriptStudioPage() {
       });
       if (!res.ok) throw new Error("서버 응답 오류");
       const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      if (data.error) {
+        // 에러 메시지가 JSON 객체일 수 있으므로 텍스트만 추출
+        const errorMsg = typeof data.error === 'string'
+          ? data.error
+          : data.error.message || JSON.stringify(data.error);
+        throw new Error(errorMsg);
+      }
 
       const newScript = data.script || "";
       const newTitle = data.titles?.[0] || title;

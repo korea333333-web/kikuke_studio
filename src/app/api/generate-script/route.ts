@@ -61,10 +61,37 @@ ${videoFormat === 'drama' || isCliffhanger ? endingPrompt : ''}
 최고의 퀄리티로, 지금 당장 촬영에 들어가 영상 편집을 시작할 수 있는 수준으로 JSON 본문을 꽉 채워서 생성하세요.
 `;
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-        });
+        // 재시도 로직 포함하여 Gemini 호출
+        let response;
+        let lastError;
+        const maxRetries = 2;
+
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                response = await ai.models.generateContent({
+                    model: 'gemini-2.5-flash',
+                    contents: prompt,
+                });
+                break; // 성공하면 루프 탈출
+            } catch (retryError: any) {
+                lastError = retryError;
+                console.error(`Gemini API attempt ${attempt + 1} failed:`, retryError?.message || retryError);
+
+                // 429(할당량 초과)는 재시도하지 않음
+                if (retryError?.status === 429 || retryError?.message?.includes('429')) {
+                    throw retryError;
+                }
+
+                // 마지막 시도가 아니면 2초 대기 후 재시도
+                if (attempt < maxRetries) {
+                    await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+                }
+            }
+        }
+
+        if (!response) {
+            throw lastError || new Error('AI 응답을 받지 못했습니다.');
+        }
 
         const text = response.text || "{}";
         // Clean up potential markdown blocks if Gemini wraps the JSON
@@ -80,7 +107,6 @@ ${videoFormat === 'drama' || isCliffhanger ? endingPrompt : ''}
             return NextResponse.json(parsed, { status: 200 });
         } catch (parseError: any) {
             console.error('Failed to parse Gemini JSON:', cleanedText);
-            require('fs').appendFileSync('api_error.log', '\n[PARSE ERROR] ' + parseError?.message + '\n' + cleanedText);
             return NextResponse.json({ error: 'AI가 생성한 데이터를 분석하는데 실패했습니다 (JSON 오류)' }, { status: 500 });
         }
     } catch (error: any) {
@@ -91,6 +117,13 @@ ${videoFormat === 'drama' || isCliffhanger ? endingPrompt : ''}
             return NextResponse.json({
                 error: '제미나이 AI 무료 호출 한도(분당 15회)를 초과했습니다. 물 한 잔 드시고 1분 뒤에 다시 시도해주세요 ☕'
             }, { status: 429 });
+        }
+
+        // Handle Gemini INTERNAL errors (500)
+        if (error?.status === 500 || error?.message?.includes('INTERNAL') || error?.message?.includes('internal error')) {
+            return NextResponse.json({
+                error: 'AI 서버가 일시적으로 과부하 상태입니다. 30초 후 다시 시도해주세요. (대본 분량이 너무 길면 줄여보세요) 🔄'
+            }, { status: 500 });
         }
 
         return NextResponse.json({ error: '대본 생성에 실패했습니다: ' + (error?.message || '알 수 없는 오류') }, { status: 500 });
