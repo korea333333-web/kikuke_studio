@@ -43,17 +43,34 @@ ${styleGuide}
 === SAFETY RULES (반드시 지켜야 합니다 - 안 지키면 이미지 생성이 차단됩니다) ===
 
 **절대 금지 (이 단어가 있으면 100% 차단됩니다)**:
-1. ❌ 구체적 나이 숫자 금지: "73 years old", "25 years old" → 대신 외모 특징으로: "with silver-streaked hair and gentle laugh lines", "youthful vibrant look"
-2. ❌ 국적/인종/민족 금지: "Korean", "Asian", "Japanese", "Chinese", "East Asian" → 완전히 삭제, 대신 의상/헤어/분위기로 간접 표현
-3. ❌ "elderly", "old man", "old woman" 금지 → "graceful mature figure", "silver-haired dignified person"
-4. ❌ 캐릭터 이름 금지: "Park Seon-yeong" → prompt에 이름 넣지 말 것 (target에만 사용)
-5. ❌ "closeup" 단독 금지 → "medium shot, upper body framing" 또는 "portrait composition"
+1. ❌ 구체적 나이 숫자 금지: "73 years old", "25 years old" → 대신 외모 특징으로 표현
+2. ❌ 국적/인종/민족 라벨 금지: "Korean", "Asian", "Japanese", "Chinese", "East Asian" → 이 단어들은 절대 쓰지 마세요
+3. ❌ "elderly", "old man", "old woman" 금지 → "graceful mature figure", "silver-haired dignified person" 등으로 대체
+4. ❌ 캐릭터 이름 금지: prompt 안에 이름 넣지 말 것 (target에만 사용)
+5. ❌ "closeup" 단독 금지 → "medium shot", "portrait composition", "bust shot"
 
-**✅ 안전한 표현 방법**:
-- 나이 → 외모 특징으로 대체: hair color (silver, dark, auburn), facial features (laugh lines, bright eyes), overall demeanor
-- 민족성 → 환경과 소품으로 암시: 한옥 배경, 전통 차(tea), 골목길, 시장, 벚꽃 등 배경과 소품을 활용
-- 실사 스타일에서는 "cinematic", "movie still", "35mm film", "shallow depth of field" 같은 영화적 키워드를 적극 사용
-- "closeup" 대신 → "portrait composition", "medium close-up", "bust shot"
+=== 캐릭터 외형 유도 (매우 중요!!!) ===
+"Korean"이라는 단어는 금지되지만, 한국인처럼 보이는 외형을 **구체적인 신체 특징 키워드들**로 반드시 표현해야 합니다.
+모든 캐릭터 프롬프트에 아래 특징들을 적절히 섞어서 필수로 포함하세요:
+
+**얼굴/외형 특징 키워드 (반드시 사용)**:
+- "straight black hair" 또는 "dark brown hair" (한국인 헤어)
+- "dark brown eyes" 또는 "warm dark eyes" (한국인 눈 색)
+- "soft rounded facial features" 또는 "gentle facial structure" (한국인 얼굴형)
+- "warm ivory skin tone" 또는 "warm undertone complexion" (한국인 피부톤)
+- 나이가 든 캐릭터: "silver-streaked black hair", "graceful laugh lines around warm dark eyes"
+- 젊은 캐릭터: "youthful with straight dark hair", "bright dark eyes"
+
+**영화 스타일 키워드 (실사일 때 반드시 사용)**:
+- "K-drama cinematography" — 이건 영화 촬영 스타일을 뜻하므로 안전합니다
+- "Seoul street backdrop" 또는 "traditional tile-roofed architecture" (한국 배경)
+- "warm ondol-heated room", "traditional wooden floor", "paper sliding doors" (한국 실내)
+
+**의상/소품 키워드**:
+- "neat casual fashion", "modest modern outfit" (한국식 캐주얼)
+- "silk hanbok-inspired blouse", "traditional jade accessories" (한복 모티프)
+- 노인 캐릭터: "comfortable warm knit vest", "reading glasses on chain"
+- "ceramic tea cup", "banchan on wooden table" (한국 소품)
 
 [Output Rules]
 1. All prompts MUST be in **English only**.
