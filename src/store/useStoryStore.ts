@@ -7,6 +7,7 @@ export interface Cut {
     description: string;         // 컷 설명 (한국어)
     duration: string;            // 예상 시간 (예: "3초")
     imagePrompt: string;         // AI 이미지 생성용 영어 프롬프트
+    imagePromptKr?: string;      // 영어 프롬프트의 한국어 번역
     imageUrl?: string;           // 생성된 이미지 URL (선택)
 }
 

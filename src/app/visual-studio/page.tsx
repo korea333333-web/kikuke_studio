@@ -1158,7 +1158,7 @@ export default function VisualStudioPage() {
                                                                             )}
                                                                         </button>
                                                                         <button
-                                                                            onClick={() => handleCopyPrompt(`kr-${cutId}`, cut.description)}
+                                                                            onClick={() => handleCopyPrompt(`kr-${cutId}`, cut.imagePromptKr || cut.description)}
                                                                             className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-all ${copiedCutId === `kr-${cutId}`
                                                                                 ? 'bg-emerald-500 text-white'
                                                                                 : 'bg-blue-600 hover:bg-blue-700 text-white'
@@ -1279,7 +1279,7 @@ export default function VisualStudioPage() {
                                                                                 {/* 한글 프롬프트 복사 */}
                                                                                 <button
                                                                                     onClick={() => {
-                                                                                        navigator.clipboard.writeText(cut.description || '');
+                                                                                        navigator.clipboard.writeText(cut.imagePromptKr || cut.description || '');
                                                                                         setCopiedCutId(`video-kr-${cutIdx}`);
                                                                                         setTimeout(() => setCopiedCutId(null), 2000);
                                                                                     }}

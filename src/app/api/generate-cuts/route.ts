@@ -66,14 +66,16 @@ ${characterSheet ? `[캐릭터 시트(외형 DNA)]\n${characterSheet}` : ''}
    - 캐릭터가 등장하면 캐릭터 시트의 외형 묘사를 100% 반영
    - 한국 배경이면 "Korean" 키워드 포함
    - 프롬프트 끝에 반드시 다음 품질 키워드 추가: ", ${styleDesc}, ${cameraDesc}, ${lightDesc}, consistent character design, exquisite details, masterpiece, best quality, 8k resolution"
-4. 반드시 다음 JSON 형식의 배열로만 응답하세요 (마크다운 백틱 없이, 순수 JSON만):
+4. 각 컷의 imagePromptKr은 imagePrompt를 한국어로 완전히 번역한 것입니다. 영어 프롬프트의 모든 내용을 빠짐없이 한국어로 번역해주세요.
+5. 반드시 다음 JSON 형식의 배열로만 응답하세요 (마크다운 백틱 없이, 순수 JSON만):
 
 [
   {
     "cutNumber": 1,
     "description": "컷 설명 (한국어로, 예: 서울 야경을 배경으로 한 드론샷)",
     "duration": "3초",
-    "imagePrompt": "A breathtaking aerial drone shot of Seoul city at night... ${styleDesc}, ${cameraDesc}, ${lightDesc}, consistent character design, exquisite details, masterpiece, best quality, 8k resolution"
+    "imagePrompt": "A breathtaking aerial drone shot of Seoul city at night... ${styleDesc}, ${cameraDesc}, ${lightDesc}, consistent character design, exquisite details, masterpiece, best quality, 8k resolution",
+    "imagePromptKr": "서울 야경의 숨막히는 항공 드론 촬영... (imagePrompt의 완전한 한국어 번역)"
   }
 ]
 `;
