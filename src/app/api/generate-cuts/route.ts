@@ -60,6 +60,8 @@ ${characterSheet ? `[캐릭터 시트(외형 DNA)]\n${characterSheet}` : ''}
 
 [요구사항]
 1. 이 씬을 3~8개의 세부 컷으로 나누세요.
+   - 영화적으로 다양한 카메라 구도를 활용하세요. 특히 대화 장면에서는 일부 컷에 **Over-the-Shoulder Shot(OTS, 어깨 너머 촬영)**을 사용하면 깊이감과 몰입감이 높아집니다. 단, 모든 컷에 쓰지 말고 적절히 섞어주세요.
+   - OTS 샷을 사용할 때는 반드시 어깨가 보이는 인물의 이름과 외형도 프롬프트에 명시하세요. 예: "Over-the-shoulder shot from behind Park Jung-soo (70s male, silver hair), focusing on Lee Young-ae across the table"
 2. 각 컷의 한국어 설명과 예상 길이(초)를 작성하세요.
 3. 각 컷의 imagePrompt는 반드시 영어로 작성하고, 아래 규칙을 따르세요:
    - ★★★ 가장 중요 ★★★: 이 씬의 장소/배경/시간대/분위기를 모든 컷의 프롬프트에 반드시 공통으로 포함하세요! 예를 들어 씬이 "노인정 카페테리아"에서 진행된다면, 모든 컷의 프롬프트에 "in a senior center cafeteria" 배경 묘사가 들어가야 합니다. 클로즈업이라도 배경이 blurred로 보여야 합니다. 절대로 씬의 장소와 다른 배경이 나오면 안 됩니다.
