@@ -1143,18 +1143,31 @@ export default function VisualStudioPage() {
                                                                         )}
                                                                     </div>
                                                                     {/* 이미지 하단 버튼 */}
-                                                                    <div className="flex items-center gap-2 mt-2">
+                                                                    <div className="flex items-center gap-2 mt-2 flex-wrap">
                                                                         <button
-                                                                            onClick={() => handleCopyPrompt(cutId, cut.imagePrompt)}
-                                                                            className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-all ${isCopied
+                                                                            onClick={() => handleCopyPrompt(`en-${cutId}`, cut.imagePrompt)}
+                                                                            className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-all ${copiedCutId === `en-${cutId}`
                                                                                 ? 'bg-emerald-500 text-white'
                                                                                 : 'bg-slate-800 hover:bg-slate-900 text-white'
                                                                                 }`}
                                                                         >
-                                                                            {isCopied ? (
+                                                                            {copiedCutId === `en-${cutId}` ? (
                                                                                 <><Check className="w-3 h-3" /> 복사됨!</>
                                                                             ) : (
-                                                                                <><Copy className="w-3 h-3" /> 프롬프트 복사</>
+                                                                                <><Copy className="w-3 h-3" /> 영문 프롬프트 복사</>
+                                                                            )}
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleCopyPrompt(`kr-${cutId}`, cut.description)}
+                                                                            className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-all ${copiedCutId === `kr-${cutId}`
+                                                                                ? 'bg-emerald-500 text-white'
+                                                                                : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                                                                }`}
+                                                                        >
+                                                                            {copiedCutId === `kr-${cutId}` ? (
+                                                                                <><Check className="w-3 h-3" /> 복사됨!</>
+                                                                            ) : (
+                                                                                <><Copy className="w-3 h-3" /> 한글 프롬프트 복사</>
                                                                             )}
                                                                         </button>
                                                                         <button
@@ -1252,17 +1265,27 @@ export default function VisualStudioPage() {
                                                                                     </button>
                                                                                 )}
 
-                                                                                {/* 프롬프트 복사 */}
+                                                                                {/* 영문 프롬프트 복사 */}
                                                                                 <button
                                                                                     onClick={() => {
-                                                                                        const prompt = cut.imagePrompt || cut.description || '';
-                                                                                        navigator.clipboard.writeText(prompt);
-                                                                                        setCopiedCutId(`video-${cutIdx}`);
+                                                                                        navigator.clipboard.writeText(cut.imagePrompt || '');
+                                                                                        setCopiedCutId(`video-en-${cutIdx}`);
                                                                                         setTimeout(() => setCopiedCutId(null), 2000);
                                                                                     }}
-                                                                                    className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-all active:scale-95 ${copiedCutId === `video-${cutIdx}` ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                                                                                    className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-all active:scale-95 ${copiedCutId === `video-en-${cutIdx}` ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                                                                                 >
-                                                                                    {copiedCutId === `video-${cutIdx}` ? <><Check className="w-3 h-3" /> 복사됨!</> : <><Copy className="w-3 h-3" /> 복사</>}
+                                                                                    {copiedCutId === `video-en-${cutIdx}` ? <><Check className="w-3 h-3" /> 복사됨!</> : <><Copy className="w-3 h-3" /> 영문</>}
+                                                                                </button>
+                                                                                {/* 한글 프롬프트 복사 */}
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        navigator.clipboard.writeText(cut.description || '');
+                                                                                        setCopiedCutId(`video-kr-${cutIdx}`);
+                                                                                        setTimeout(() => setCopiedCutId(null), 2000);
+                                                                                    }}
+                                                                                    className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-all active:scale-95 ${copiedCutId === `video-kr-${cutIdx}` ? 'bg-emerald-500 text-white' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'}`}
+                                                                                >
+                                                                                    {copiedCutId === `video-kr-${cutIdx}` ? <><Check className="w-3 h-3" /> 복사됨!</> : <><Copy className="w-3 h-3" /> 한글</>}
                                                                                 </button>
                                                                             </div>
 
